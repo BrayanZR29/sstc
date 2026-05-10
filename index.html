@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sólidos con Secciones Transversales Conocidas</title>
+
+<!-- Fuentes tipo escritura a mano -->
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- KaTeX CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+
+body{
+  font-family:'Kalam',cursive;
+  /* Fondo cuadriculado tipo papel milimetrado */
+  background-color:#F7F8FC;
+  background-image:
+    linear-gradient(rgba(90,130,220,.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90,130,220,.13) 1px, transparent 1px);
+  background-size:42px 42px;
+  color:#1c2133;
+  display:flex;flex-direction:column;
+}
+
+/* ── TOP ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 48px;
+  background:rgba(247,248,252,.94);
+  border-bottom:2px solid rgba(90,130,220,.14);
+  flex-shrink:0;
+  transition:opacity .3s,transform .3s;
+}
+.topbar.hidden{opacity:0;pointer-events:none;transform:translateY(-100%)}
+.tlbl{font-family:'Kalam',cursive;font-size:13px;color:#94a3b8;letter-spacing:1px}
+.tcnt{font-family:'Kalam',cursive;font-size:13px;color:#94a3b8}
+
+.progress{height:3px;background:rgba(0,0,0,.06);flex-shrink:0}
+.pbar{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .4s ease}
+
+/* ── VIEWPORT ── */
+.viewport{flex:1;overflow:hidden;position:relative}
+.track{display:flex;height:100%;transition:transform .5s cubic-bezier(.4,0,.2,1);will-change:transform}
+
+/* ── SLIDE ── */
+.slide{
+  min-width:100%;height:100%;
+  padding:28px 60px 18px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;
+  position:relative;
+}
+.slide::-webkit-scrollbar{width:4px}
+.slide::-webkit-scrollbar-thumb{background:rgba(0,0,0,.10);border-radius:2px}
+
+/* Tipo de slide — fondo apenas visible */
+.slide.theory{background:rgba(219,234,254,.22)}
+.slide.ex1   {background:rgba(254,243,199,.24)}
+.slide.ex2   {background:rgba(237,233,254,.24)}
+.slide.close {background:rgba(220,252,231,.22)}
+
+/* ── STEP DOTS ── */
+.sdots{position:absolute;top:14px;right:50px;display:flex;gap:6px;align-items:center}
+.sdot{width:8px;height:8px;border-radius:50%;background:#dde3ee;transition:all .25s}
+.sdot.done{background:#94a3b8}
+.sdot.now {background:#475569;width:22px;border-radius:4px}
+
+/* ── TIPOGRAFÍA ── */
+.lbl{
+  font-family:'Kalam',cursive;font-size:14px;
+  letter-spacing:2px;text-transform:uppercase;color:#94a3b8;
+  margin-bottom:4px;
+}
+.stitle{
+  font-family:'Caveat',cursive;
+  font-size:clamp(34px,4vw,52px);font-weight:700;
+  color:#0f1b2d;line-height:1.1;margin-bottom:3px;
+}
+.stitle.ex1{color:#78350f}
+.stitle.ex2{color:#3b0764}
+.stitle.cl {color:#14532d}
+
+.rule{width:50px;height:3px;border-radius:3px;margin:8px 0 20px}
+.rule.theory{background:linear-gradient(90deg,#3b82f6,transparent)}
+.rule.ex1   {background:linear-gradient(90deg,#f59e0b,transparent)}
+.rule.ex2   {background:linear-gradient(90deg,#8b5cf6,transparent)}
+.rule.cl    {background:linear-gradient(90deg,#22c55e,transparent)}
+
+p,.txt{
+  font-family:'Kalam',cursive;
+  font-size:clamp(17px,1.7vw,21px);
+  line-height:1.75;color:#2d3748;
+  max-width:720px;
+}
+
+/* ── STEP REVEAL ── */
+.step{
+  opacity:0;transform:translateY(14px);
+  transition:opacity .4s ease,transform .4s ease;
+  pointer-events:none;
+}
+.step.on{opacity:1;transform:translateY(0);pointer-events:auto}
+
+/* ── MATH WRAPPER SIZES ── */
+/* KaTeX escala con font-size del contenedor */
+.math-lg  {font-size:2.2rem;text-align:center;margin:14px 0;line-height:1.6}
+.math-xl  {font-size:2.8rem;text-align:center;margin:16px 0;line-height:1.5}
+.math-md  {font-size:1.8rem;margin:10px 0 10px 8px;line-height:1.6}
+.math-sm  {font-size:1.4rem;margin:6px 0 6px 8px;line-height:1.6;color:#374151}
+.math-res {font-size:2.6rem;text-align:center;margin:14px 0;color:#166534}
+
+/* Inline math dentro de párrafo hereda el tamaño del párrafo */
+p .katex,.txt .katex{font-size:1em}
+
+/* ── COLORES DE ÉNFASIS (texto manual) ── */
+strong.b {color:#1d4ed8}
+strong.e1{color:#b45309}
+strong.e2{color:#6d28d9}
+strong.gr{color:#166534}
+.muted{color:#6b7280;font-size:15px}
+
+/* ── LAYOUT ── */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+.svgbox{display:flex;align-items:center;justify-content:center}
+.svgbox svg{max-width:100%;height:auto}
+
+/* ── TINT ZONE (sin borde) ── */
+.zone{background:rgba(59,130,246,.06);border-radius:10px;padding:12px 20px;margin:8px 0}
+.zone.ex1{background:rgba(245,158,11,.07)}
+.zone.ex2{background:rgba(139,92,246,.07)}
+.zone.res{background:rgba(34,197,94,.08)}
+
+/* ── MÉTODO ITEMS ── */
+.mitem{display:flex;gap:14px;align-items:flex-start;margin:8px 0}
+.mnum{font-family:'Kalam',cursive;font-size:15px;color:#94a3b8;width:24px;flex-shrink:0;padding-top:4px}
+
+/* ── RESULT ROW ── */
+.res-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+.rcard{border-radius:10px;padding:16px 20px}
+.rcard.e1{background:rgba(245,158,11,.07)}
+.rcard.e2{background:rgba(139,92,246,.07)}
+
+/* ── COVER ── */
+.cover-c{
+  flex:1;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;gap:14px;
+}
+.cov-eye{font-family:'Kalam',cursive;font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#94a3b8}
+.cov-h{
+  font-family:'Caveat',cursive;
+  font-size:clamp(36px,6vw,72px);font-weight:700;
+  color:#0f172a;line-height:1.05;
+}
+.cov-sub{font-family:'Kalam',cursive;font-size:clamp(16px,1.8vw,20px);color:#6b7280;max-width:520px}
+.team-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.tname{font-family:'Kalam',cursive;font-size:15px;color:#475569;padding:5px 16px;border-bottom:2px solid #cbd5e1}
+
+/* ── NAV ── */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 48px;
+  background:rgba(247,248,252,.94);
+  border-top:2px solid rgba(90,130,220,.14);
+  flex-shrink:0;
+  transition:opacity .3s,transform .3s;
+}
+.nav.hidden{opacity:0;pointer-events:none;transform:translateY(100%)}
+.nbtn{
+  font-family:'Kalam',cursive;
+  background:none;border:2px solid #d1d5db;color:#374151;
+  border-radius:10px;padding:7px 24px;font-size:16px;
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px;
+}
+.nbtn:hover:not(:disabled){border-color:#9ca3af;background:rgba(0,0,0,.03)}
+.nbtn:disabled{opacity:.3;cursor:not-allowed}
+.nbtn.nxt{background:#1e293b;border-color:#1e293b;color:#fff;font-weight:700}
+.nbtn.nxt:hover:not(:disabled){background:#0f172a}
+.nhint{font-family:'Kalam',cursive;font-size:12px;color:#c9d2e0;text-align:center}
+
+@media(max-width:640px){
+  .cols{grid-template-columns:1fr;gap:16px}
+  .slide{padding:20px 22px 14px}
+  .nav,.topbar{padding:8px 20px}
+  .sdots{right:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <span class="tlbl">Cálculo Integral · Volúmenes</span>
+  <span class="tcnt" id="sc">1 / 10</span>
+</div>
+<div class="progress"><div class="pbar" id="pb" style="width:10%"></div></div>
+
+<div class="viewport">
+<div class="track" id="track">
+
+<!-- ════════════════════════════════════════
+  S0 · PORTADA
+════════════════════════════════════════ -->
+<div class="slide">
+  <div class="cover-c">
+    <div class="step on" data-s="0" data-i="0">
+      <div class="cov-eye">Cálculo Integral &nbsp;·&nbsp; Aplicaciones de la Integral Definida</div>
+      <h1 class="cov-h">Sólidos con<br>Secciones Transversales<br>Conocidas</h1>
+      <p class="cov-sub">Calcular volúmenes de figuras 3D a partir de la forma de sus cortes perpendiculares al eje x.</p>
+      <div class="team-row">
+        <span class="tname">Integrante 1</span>
+        <span class="tname">Integrante 2</span>
+        <span class="tname">Integrante 3</span>
+        <span class="tname">Integrante 4</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S1 · CONCEPTO (3 pasos)
+════════════════════════════════════════ -->
+<div class="slide theory">
+  <div class="sdots" id="d1"></div>
+  <div class="lbl">Teoría</div>
+  <h2 class="stitle">¿Qué son las secciones transversales conocidas?</h2>
+  <div class="rule theory"></div>
+
+  <div class="step" data-s="1" data-i="0">
+    <p>Son sólidos cuya <strong class="b">base</strong> es una región plana, y en cada punto \(x\) del intervalo conocemos la <strong class="b">forma geométrica</strong> de la sección que lo corta perpendicularmente al eje \(x\).</p>
+  </div>
+
+  <div class="step" data-s="1" data-i="1" style="margin-top:18px">
+    <p class="muted" style="margin-bottom:10px">Formas más usadas como sección:</p>
+    <div style="display:flex;gap:30px;flex-wrap:wrap;align-items:flex-end">
+      <div style="text-align:center">
+        <svg width="60" height="60" viewBox="0 0 60 60"><rect x="8" y="8" width="44" height="44" fill="rgba(245,158,11,.13)" stroke="#b45309" stroke-width="2.2" rx="2"/></svg>
+        <p style="font-size:15px;color:#b45309;margin-top:4px">Cuadrado</p>
+      </div>
+      <div style="text-align:center">
+        <svg width="60" height="60" viewBox="0 0 60 60"><path d="M8 52 A22 22 0 0 1 52 52 Z" fill="rgba(139,92,246,.13)" stroke="#6d28d9" stroke-width="2.2"/><line x1="8" y1="52" x2="52" y2="52" stroke="#6d28d9" stroke-width="1.6"/></svg>
+        <p style="font-size:15px;color:#6d28d9;margin-top:4px">Semicírculo</p>
+      </div>
+      <div style="text-align:center">
+        <svg width="60" height="60" viewBox="0 0 60 60"><polygon points="30,8 52,52 8,52" fill="rgba(34,197,94,.10)" stroke="#166534" stroke-width="2.2"/></svg>
+        <p style="font-size:15px;color:#166534;margin-top:4px">Triángulo</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-s="1" data-i="2" style="margin-top:18px">
+    <div class="cols" style="align-items:center">
+      <p>Para cada posición \(x \in [a,b]\) hay una sección de forma conocida. La sección <strong class="b">cambia de tamaño con \(x\)</strong> pero mantiene su geometría.</p>
+      <div class="svgbox">
+        <svg viewBox="0 0 270 175" xmlns="http://www.w3.org/2000/svg" width="270">
+          <line x1="22" y1="148" x2="240" y2="148" stroke="#b0bec5" stroke-width="2"/>
+          <line x1="22" y1="148" x2="22" y2="22" stroke="#b0bec5" stroke-width="2"/>
+          <text x="244" y="153" fill="#94a3b8" font-size="14" font-family="Kalam,cursive">x</text>
+          <text x="17" y="18" fill="#94a3b8" font-size="14" font-family="Kalam,cursive">y</text>
+          <path d="M22 148 C65 80 125 50 205 38 L205 148 Z" fill="rgba(59,130,246,.07)" stroke="none"/>
+          <path d="M22 148 C65 80 125 50 205 38" stroke="#3b82f6" stroke-width="2.2" fill="none"/>
+          <rect x="70"  y="116" width="17" height="17" fill="rgba(245,158,11,.22)" stroke="#b45309" stroke-width="1.8"/>
+          <rect x="115" y="95"  width="24" height="24" fill="rgba(245,158,11,.18)" stroke="#b45309" stroke-width="1.8"/>
+          <rect x="158" y="76"  width="32" height="32" fill="rgba(245,158,11,.15)" stroke="#b45309" stroke-width="1.8"/>
+          <text x="73"  y="163" fill="#6b7280" font-size="12" font-family="Kalam,cursive">x₁</text>
+          <text x="120" y="163" fill="#6b7280" font-size="12" font-family="Kalam,cursive">x₂</text>
+          <text x="165" y="163" fill="#6b7280" font-size="12" font-family="Kalam,cursive">x₃</text>
+          <text x="20"  y="143" fill="#6b7280" font-size="12" font-family="Kalam,cursive">a</text>
+          <text x="200" y="143" fill="#6b7280" font-size="12" font-family="Kalam,cursive">b</text>
+          <text x="155" y="36"  fill="#3b82f6" font-size="13" font-family="Kalam,cursive">f(x)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S2 · FÓRMULA (3 pasos)
+════════════════════════════════════════ -->
+<div class="slide theory">
+  <div class="sdots" id="d2"></div>
+  <div class="lbl">Teoría</div>
+  <h2 class="stitle">Fórmula general del volumen</h2>
+  <div class="rule theory"></div>
+
+  <div class="step" data-s="2" data-i="0">
+    <p>Cortamos el sólido en <strong class="b">rebanadas infinitesimales</strong> de grosor \(dx\). Cada rebanada aporta:</p>
+    <div class="math-lg">\( dV \approx A(x) \cdot dx \)</div>
+    <p>donde \(A(x)\) es el área de la sección en el punto \(x\).</p>
+  </div>
+
+  <div class="step" data-s="2" data-i="1" style="margin-top:20px">
+    <p class="muted" style="margin-bottom:4px">Sumando infinitas rebanadas de \(a\) hasta \(b\):</p>
+    <div class="math-xl zone theory">\[ V = \int_a^b A(x)\,dx \]</div>
+  </div>
+
+  <div class="step" data-s="2" data-i="2" style="margin-top:12px">
+    <p>Tres acciones siempre:</p>
+    <div class="mitem" style="margin-top:10px"><div class="mnum">01</div><p>Encontrar \(A(x)\) con la geometría de la sección.</p></div>
+    <div class="mitem"><div class="mnum">02</div><p>Fijar los límites \(a\) y \(b\) del intervalo.</p></div>
+    <div class="mitem"><div class="mnum">03</div><p>Calcular la integral \(\displaystyle\int_a^b A(x)\,dx\).</p></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S3 · EJ1 ENUNCIADO (2 pasos)
+════════════════════════════════════════ -->
+<div class="slide ex1">
+  <div class="sdots" id="d3"></div>
+  <div class="lbl">Ejemplo 1 · Cuadrados</div>
+  <h2 class="stitle ex1">Planteamiento del problema</h2>
+  <div class="rule ex1"></div>
+
+  <div class="step" data-s="3" data-i="0">
+    <p>La base es la región acotada por:</p>
+    <div class="math-lg zone ex1">\( y = \sqrt{x}, \quad y = 0, \quad x = 0, \quad x = 4 \)</div>
+    <p>Las <strong class="e1">secciones transversales</strong> perpendiculares al eje \(x\) son <strong class="e1">cuadrados</strong> con el lado sobre la base.<br>Encontrar el <strong class="e1">volumen</strong> del sólido.</p>
+  </div>
+
+  <div class="step" data-s="3" data-i="1" style="margin-top:18px">
+    <div class="cols" style="align-items:center">
+      <p>En \(x=0\) la curva empieza en el origen. En \(x=4\) alcanza \(y=2\). La región sombreada es la <strong class="e1">base</strong> del sólido.</p>
+      <div class="svgbox">
+        <svg viewBox="0 0 260 175" xmlns="http://www.w3.org/2000/svg" width="260">
+          <line x1="20" y1="150" x2="230" y2="150" stroke="#b0bec5" stroke-width="2"/>
+          <line x1="20" y1="150" x2="20" y2="20" stroke="#b0bec5" stroke-width="2"/>
+          <text x="234" y="155" fill="#94a3b8" font-size="14" font-family="Kalam,cursive">x</text>
+          <text x="16" y="17" fill="#94a3b8" font-size="14" font-family="Kalam,cursive">y</text>
+          <path d="M20 150 Q75 150 125 103 Q168 68 205 46 L205 150 Z" fill="rgba(245,158,11,.13)" stroke="none"/>
+          <path d="M20 150 Q75 150 125 103 Q168 68 205 46" stroke="#b45309" stroke-width="2.5" fill="none"/>
+          <line x1="205" y1="42" x2="205" y2="150" stroke="rgba(180,83,9,.25)" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="200" y="164" fill="#b45309" font-size="13" font-family="Kalam,cursive">4</text>
+          <text x="6"   y="48"  fill="#b45309" font-size="13" font-family="Kalam,cursive">2</text>
+          <line x1="18" y1="46" x2="22" y2="46" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="138" y="88" fill="#b45309" font-size="15" font-family="Kalam,cursive">y = √x</text>
+          <line x1="68"  y1="150" x2="68"  y2="128" stroke="rgba(180,83,9,.22)" stroke-width="1.2"/>
+          <line x1="110" y1="150" x2="110" y2="110" stroke="rgba(180,83,9,.22)" stroke-width="1.2"/>
+          <line x1="157" y1="150" x2="157" y2="80"  stroke="rgba(180,83,9,.22)" stroke-width="1.2"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S4 · EJ1 SECCIÓN + A(x) (3 pasos)
+════════════════════════════════════════ -->
+<div class="slide ex1">
+  <div class="sdots" id="d4"></div>
+  <div class="lbl">Ejemplo 1 · Cuadrados</div>
+  <h2 class="stitle ex1">La sección transversal y A(x)</h2>
+  <div class="rule ex1"></div>
+
+  <div class="step" data-s="4" data-i="0">
+    <p>En cada punto \(x\), la sección perpendicular al eje \(x\) es un <strong class="e1">cuadrado</strong> cuyo <strong class="e1">lado</strong> es la altura de la curva:</p>
+    <div class="math-lg">\[ \text{lado}(x) = \sqrt{x} \]</div>
+  </div>
+
+  <div class="step" data-s="4" data-i="1" style="margin-top:10px">
+    <div class="cols" style="align-items:center">
+      <div>
+        <p>El área del cuadrado es \(A = \text{lado}^2\), entonces:</p>
+        <div class="math-lg zone ex1">\[ A(x) = \left(\sqrt{x}\right)^2 = x \]</div>
+        <p class="muted">x=1 → lado=1 &nbsp;·&nbsp; x=4 → lado=2</p>
+      </div>
+      <div class="svgbox">
+        <svg viewBox="0 0 220 175" xmlns="http://www.w3.org/2000/svg" width="220">
+          <line x1="18" y1="148" x2="195" y2="148" stroke="#b0bec5" stroke-width="1.8"/>
+          <line x1="18" y1="148" x2="18" y2="22" stroke="#b0bec5" stroke-width="1.8"/>
+          <path d="M18 148 Q68 148 108 108 Q140 78 165 55" stroke="#b45309" stroke-width="2.2" fill="none"/>
+          <line x1="108" y1="148" x2="108" y2="108" stroke="rgba(180,83,9,.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="88" y="108" width="40" height="40" fill="rgba(245,158,11,.18)" stroke="#b45309" stroke-width="2.2"/>
+          <rect x="108" y="140" width="6" height="6" fill="none" stroke="#b45309" stroke-width="1.5"/>
+          <text x="130" y="130" fill="#b45309" font-size="14" font-family="Kalam,cursive">√x</text>
+          <text x="92"  y="162" fill="#b45309" font-size="14" font-family="Kalam,cursive">√x</text>
+          <text x="22"  y="50"  fill="#6b7280" font-size="13" font-family="Kalam,cursive">y=√x</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-s="4" data-i="2" style="margin-top:8px">
+    <p>Resultado del área de la sección transversal:</p>
+    <div class="zone ex1 math-lg">\( A(x) = x \)</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S5 · EJ1 INTEGRAL (5 pasos)
+════════════════════════════════════════ -->
+<div class="slide ex1">
+  <div class="sdots" id="d5"></div>
+  <div class="lbl">Ejemplo 1 · Cuadrados</div>
+  <h2 class="stitle ex1">Plantear y resolver la integral</h2>
+  <div class="rule ex1"></div>
+
+  <div class="step" data-s="5" data-i="0">
+    <p>Sustituimos \(A(x)=x\) en la fórmula con \(a=0,\;b=4\):</p>
+    <div class="math-xl zone ex1">\[ V = \int_0^4 x\,dx \]</div>
+  </div>
+
+  <div class="step" data-s="5" data-i="1" style="margin-top:8px">
+    <p class="muted" style="margin-bottom:4px">Regla de potencias: \(\displaystyle\int x\,dx = \dfrac{x^2}{2}\)</p>
+    <div class="math-md">\( V = \left[\dfrac{x^2}{2}\right]_0^4 \)</div>
+  </div>
+
+  <div class="step" data-s="5" data-i="2">
+    <div class="math-md">\( V = \dfrac{4^2}{2} - \dfrac{0^2}{2} \)</div>
+  </div>
+
+  <div class="step" data-s="5" data-i="3">
+    <div class="math-md">\( V = \dfrac{16}{2} - 0 = 8 \)</div>
+  </div>
+
+  <div class="step" data-s="5" data-i="4" style="margin-top:10px">
+    <div class="zone res math-res">\[ V = 8 \;\text{unidades}^3 \quad \checkmark \]</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S6 · EJ2 ENUNCIADO (2 pasos)
+════════════════════════════════════════ -->
+<div class="slide ex2">
+  <div class="sdots" id="d6"></div>
+  <div class="lbl">Ejemplo 2 · Semicírculos</div>
+  <h2 class="stitle ex2">Planteamiento del problema</h2>
+  <div class="rule ex2"></div>
+
+  <div class="step" data-s="6" data-i="0">
+    <p>La base es la región acotada por:</p>
+    <div class="math-lg zone ex2">\( y = 1 - x^2, \quad y = 0, \quad x = -1, \quad x = 1 \)</div>
+    <p>Las <strong class="e2">secciones transversales</strong> perpendiculares al eje \(x\) son <strong class="e2">semicírculos</strong> con el diámetro sobre la base.<br>Encontrar el <strong class="e2">volumen</strong> del sólido.</p>
+  </div>
+
+  <div class="step" data-s="6" data-i="1" style="margin-top:18px">
+    <div class="cols" style="align-items:center">
+      <p>La parábola alcanza máximo \(y=1\) en \(x=0\) y toca el eje en \(x=\pm1\). El sólido se "apunta" en los extremos.</p>
+      <div class="svgbox">
+        <svg viewBox="0 0 260 175" xmlns="http://www.w3.org/2000/svg" width="260">
+          <line x1="20" y1="148" x2="240" y2="148" stroke="#b0bec5" stroke-width="2"/>
+          <line x1="130" y1="162" x2="130" y2="20" stroke="#b0bec5" stroke-width="2"/>
+          <text x="244" y="153" fill="#94a3b8" font-size="14" font-family="Kalam,cursive">x</text>
+          <text x="126" y="16" fill="#94a3b8" font-size="14" font-family="Kalam,cursive">y</text>
+          <path d="M26 148 Q78 148 130 28 Q182 148 234 148 Z" fill="rgba(139,92,246,.12)" stroke="none"/>
+          <path d="M26 148 Q78 148 130 28 Q182 148 234 148" stroke="#6d28d9" stroke-width="2.5" fill="none"/>
+          <line x1="26"  y1="144" x2="26"  y2="152" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="14"   y="165" fill="#6d28d9" font-size="13" font-family="Kalam,cursive">-1</text>
+          <line x1="234" y1="144" x2="234" y2="152" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="232"  y="165" fill="#6d28d9" font-size="13" font-family="Kalam,cursive">1</text>
+          <line x1="126" y1="28" x2="134" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="138"  y="32" fill="#6d28d9" font-size="13" font-family="Kalam,cursive">1</text>
+          <text x="145"  y="70" fill="#6d28d9" font-size="15" font-family="Kalam,cursive">y = 1−x²</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S7 · EJ2 SECCIÓN + A(x) (4 pasos)
+════════════════════════════════════════ -->
+<div class="slide ex2">
+  <div class="sdots" id="d7"></div>
+  <div class="lbl">Ejemplo 2 · Semicírculos</div>
+  <h2 class="stitle ex2">La sección transversal y A(x)</h2>
+  <div class="rule ex2"></div>
+
+  <div class="step" data-s="7" data-i="0">
+    <p>En cada punto \(x\), la sección es un <strong class="e2">semicírculo</strong>. El <strong class="e2">diámetro</strong> es la altura de la parábola:</p>
+    <div class="math-lg zone ex2">\[ \text{diámetro} = 1 - x^2 \]</div>
+  </div>
+
+  <div class="step" data-s="7" data-i="1" style="margin-top:8px">
+    <div class="cols" style="align-items:center">
+      <div>
+        <p>El radio es la mitad del diámetro:</p>
+        <div class="math-lg">\[ r(x) = \frac{1 - x^2}{2} \]</div>
+      </div>
+      <div class="svgbox">
+        <svg viewBox="0 0 260 118" xmlns="http://www.w3.org/2000/svg" width="260">
+          <line x1="30" y1="95" x2="230" y2="95" stroke="#b0bec5" stroke-width="1.8"/>
+          <line x1="88" y1="95" x2="186" y2="95" stroke="#6d28d9" stroke-width="2.8"/>
+          <path d="M88 95 A49 49 0 0 1 186 95" fill="rgba(139,92,246,.14)" stroke="#6d28d9" stroke-width="2.2"/>
+          <line x1="137" y1="95" x2="137" y2="46" stroke="rgba(109,40,217,.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="97"  y="113" fill="#6d28d9" font-size="14" font-family="Kalam,cursive">diám = 1−x²</text>
+          <text x="140" y="72"  fill="#6d28d9" font-size="14" font-family="Kalam,cursive">r(x)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-s="7" data-i="2" style="margin-top:8px">
+    <p>Área del semicírculo \(\displaystyle A = \tfrac{1}{2}\pi r^2\). Sustituimos \(r(x)\):</p>
+    <div class="math-lg zone ex2">\[ A(x) = \frac{\pi}{2}\left(\frac{1-x^2}{2}\right)^2 = \frac{\pi(1-x^2)^2}{8} \]</div>
+  </div>
+
+  <div class="step" data-s="7" data-i="3" style="margin-top:8px">
+    <p>Expandimos \((1-x^2)^2\) para integrar término a término:</p>
+    <div class="math-md">\( (1-x^2)^2 = 1 - 2x^2 + x^4 \)</div>
+    <div class="zone ex2 math-lg">\[ A(x) = \frac{\pi}{8}\left(1 - 2x^2 + x^4\right) \]</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S8 · EJ2 INTEGRAL (5 pasos)
+════════════════════════════════════════ -->
+<div class="slide ex2">
+  <div class="sdots" id="d8"></div>
+  <div class="lbl">Ejemplo 2 · Semicírculos</div>
+  <h2 class="stitle ex2">Plantear y resolver la integral</h2>
+  <div class="rule ex2"></div>
+
+  <div class="step" data-s="8" data-i="0">
+    <p>Sustituimos en la fórmula con \(a=-1,\;b=1\):</p>
+    <div class="math-xl zone ex2">\[ V = \int_{-1}^{1} \frac{\pi}{8}\!\left(1 - 2x^2 + x^4\right)dx \]</div>
+  </div>
+
+  <div class="step" data-s="8" data-i="1" style="margin-top:8px">
+    <p class="muted" style="margin-bottom:4px">Sacamos la constante \(\pi/8\) e integramos término a término:</p>
+    <div class="math-md">\( V = \dfrac{\pi}{8}\!\left[x - \dfrac{2x^3}{3} + \dfrac{x^5}{5}\right]_{-1}^{1} \)</div>
+  </div>
+
+  <div class="step" data-s="8" data-i="2" style="margin-top:6px">
+    <p class="muted" style="margin-bottom:4px">Evaluamos en cada límite:</p>
+    <div class="math-sm">\( x=\phantom{-}1:\quad 1 - \tfrac{2}{3} + \tfrac{1}{5} = \tfrac{15-10+3}{15} = \dfrac{8}{15} \)</div>
+    <div class="math-sm">\( x=-1:\quad -1 + \tfrac{2}{3} - \tfrac{1}{5} = -\dfrac{8}{15} \)</div>
+  </div>
+
+  <div class="step" data-s="8" data-i="3" style="margin-top:6px">
+    <div class="math-md">\( \text{Diferencia:}\quad \dfrac{8}{15} - \left(-\dfrac{8}{15}\right) = \dfrac{16}{15} \)</div>
+    <div class="math-md">\( V = \dfrac{\pi}{8}\cdot\dfrac{16}{15} = \dfrac{16\pi}{120} = \dfrac{2\pi}{15} \)</div>
+  </div>
+
+  <div class="step" data-s="8" data-i="4" style="margin-top:10px">
+    <div class="zone res math-res">\[ V = \frac{2\pi}{15} \approx 0.419\;\text{unidades}^3 \quad \checkmark \]</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  S9 · CONCLUSIONES (3 pasos)
+════════════════════════════════════════ -->
+<div class="slide close">
+  <div class="sdots" id="d9"></div>
+  <div class="lbl">Cierre</div>
+  <h2 class="stitle cl">Conclusiones</h2>
+  <div class="rule cl"></div>
+
+  <div class="step" data-s="9" data-i="0">
+    <p style="margin-bottom:12px">El método siempre tiene cuatro pasos:</p>
+    <div class="mitem"><div class="mnum">01</div><p>Identificar la región <strong class="b">base</strong> y sus límites \(a\) y \(b\).</p></div>
+    <div class="mitem"><div class="mnum">02</div><p>Determinar la <strong class="b">forma</strong> de la sección transversal.</p></div>
+    <div class="mitem"><div class="mnum">03</div><p>Calcular \(A(x)\) usando la geometría de esa forma.</p></div>
+    <div class="mitem"><div class="mnum">04</div><p>Calcular \(\displaystyle V = \int_a^b A(x)\,dx\).</p></div>
+  </div>
+
+  <div class="step" data-s="9" data-i="1" style="margin-top:22px">
+    <p class="muted" style="margin-bottom:12px">Resultados de hoy:</p>
+    <div class="res-row">
+      <div class="rcard e1">
+        <p style="font-size:13px;color:#b45309;letter-spacing:1px;margin-bottom:6px">EJEMPLO 1 — CUADRADOS</p>
+        <p>Base: \(y=\sqrt{x}\) en \([0,4]\)</p>
+        <p>\(A(x) = x\)</p>
+        <div class="math-md" style="color:#166534;margin-top:8px">\(V = 8\;\text{un}^3\)</div>
+      </div>
+      <div class="rcard e2">
+        <p style="font-size:13px;color:#6d28d9;letter-spacing:1px;margin-bottom:6px">EJEMPLO 2 — SEMICÍRCULOS</p>
+        <p>Base: \(y=1-x^2\) en \([-1,1]\)</p>
+        <p>\(A(x) = \dfrac{\pi(1-x^2)^2}{8}\)</p>
+        <div class="math-md" style="color:#166534;margin-top:8px">\(V = \dfrac{2\pi}{15}\;\text{un}^3\)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-s="9" data-i="2" style="margin-top:18px">
+    <p>La integral definida convierte un problema 3D en una integral de una variable. <strong class="gr">La única diferencia entre ejemplos es la geometría de la sección.</strong></p>
+    <p style="margin-top:10px;font-size:14px;color:#b0bec5">[ D → ocultar botones &nbsp;·&nbsp; F → pantalla completa &nbsp;·&nbsp; ←→ navegar ]</p>
+  </div>
+</div>
+
+</div><!-- /track -->
+</div><!-- /viewport -->
+
+<div class="nav" id="nav">
+  <button class="nbtn" id="btnP" onclick="back()" disabled>◀ Anterior</button>
+  <span class="nhint">→ revelar paso &nbsp;·&nbsp; D ocultar &nbsp;·&nbsp; F pantalla completa</span>
+  <button class="nbtn nxt" id="btnN" onclick="fwd()">Revelar ▶</button>
+</div>
+
+<!-- KaTeX (carga al final para no bloquear render) -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const STEPS = [1,3,3,2,3,5,2,4,5,3];
+const TOTAL  = STEPS.length;
+let cs=0, ci=0, navHidden=false;
+
+const track  = document.getElementById('track');
+const sc     = document.getElementById('sc');
+const pb     = document.getElementById('pb');
+const btnP   = document.getElementById('btnP');
+const btnN   = document.getElementById('btnN');
+const nav    = document.getElementById('nav');
+const topbar = document.getElementById('topbar');
+
+// ── BUILD DOTS ──────────────────────────────────────
+for(let s=0;s<TOTAL;s++){
+  const el=document.getElementById('d'+s);
+  if(!el) continue;
+  const n=STEPS[s];
+  if(n<=1){el.style.display='none';continue}
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');
+    d.className='sdot'; d.id='sd_'+s+'_'+i;
+    el.appendChild(d);
+  }
+}
+
+// ── HELPERS ──────────────────────────────────────────
+function showStep(s,i){
+  const el=document.querySelector(`.step[data-s="${s}"][data-i="${i}"]`);
+  if(el) el.classList.add('on');
+  const d=document.getElementById('sd_'+s+'_'+i);
+  if(d){d.classList.remove('now');d.classList.add('done')}
+  const nd=document.getElementById('sd_'+s+'_'+(i+1));
+  if(nd){nd.classList.remove('done');nd.classList.add('now')}
+}
+
+function initSlide(s){
+  track.style.transform=`translateX(${-s*100}%)`;
+  document.querySelectorAll(`.step[data-s="${s}"]`).forEach(e=>e.classList.remove('on'));
+  for(let i=0;i<STEPS[s];i++){const d=document.getElementById('sd_'+s+'_'+i);if(d)d.className='sdot'}
+  const fd=document.getElementById('sd_'+s+'_0');if(fd)fd.classList.add('now');
+  showStep(s,0); ci=0; updateUI();
+}
+
+function showAll(s){
+  for(let i=0;i<STEPS[s];i++) showStep(s,i);
+  ci=STEPS[s]-1; updateUI();
+}
+
+function fwd(){
+  if(ci<STEPS[cs]-1){ci++;showStep(cs,ci);updateUI();}
+  else if(cs<TOTAL-1){cs++;initSlide(cs);}
+}
+
+function back(){
+  if(cs>0){
+    cs--;
+    track.style.transform=`translateX(${-cs*100}%)`;
+    document.querySelectorAll(`.step[data-s="${cs}"]`).forEach(e=>e.classList.remove('on'));
+    showAll(cs);
+  }
+}
+
+function updateUI(){
+  sc.textContent=(cs+1)+' / '+TOTAL;
+  pb.style.width=(((cs+1)/TOTAL)*100)+'%';
+  btnP.disabled=(cs===0);
+  const atEnd=cs===TOTAL-1&&ci===STEPS[cs]-1;
+  btnN.disabled=atEnd;
+  btnN.textContent=atEnd?'¡Fin!':(ci<STEPS[cs]-1?'Revelar ▶':'Siguiente ▶');
+}
+
+function currentSlideEl(){
+  return document.querySelectorAll('.slide')[cs];
+}
+
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight',' '].includes(e.key)){e.preventDefault();fwd();}
+  if(e.key==='ArrowLeft'){e.preventDefault();back();}
+  if(e.key==='ArrowDown'){e.preventDefault();const s=currentSlideEl();if(s)s.scrollBy({top:90,behavior:'smooth'});}
+  if(e.key==='ArrowUp'){e.preventDefault();const s=currentSlideEl();if(s)s.scrollBy({top:-90,behavior:'smooth'});}
+  if(e.key.toLowerCase()==='d'){
+    navHidden=!navHidden;
+    nav.classList.toggle('hidden',navHidden);
+    topbar.classList.toggle('hidden',navHidden);
+  }
+  if(e.key.toLowerCase()==='f'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen().catch(()=>{});
+  }
+});
+
+// ── RENDER KATEX + INIT ───────────────────────────
+renderMathInElement(document.body,{
+  delimiters:[
+    {left:'$$',right:'$$',display:true},
+    {left:'\\[',right:'\\]',display:true},
+    {left:'\\(',right:'\\)',display:false}
+  ],
+  throwOnError:false,
+  strict:false
+});
+
+initSlide(0);
+</script>
+</body>
+</html>
